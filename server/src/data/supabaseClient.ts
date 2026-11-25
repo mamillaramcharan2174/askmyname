@@ -1,7 +1,24 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Robust candidate search for .env
+const candidateEnvPaths = [
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), 'server/.env'),
+  path.resolve(__dirname, '../../.env'),
+  path.resolve(__dirname, '../../../.env'),
+];
+for (const envPath of candidateEnvPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  }
+}
 
 export interface SupabaseConfig {
   url?: string;
@@ -13,6 +30,11 @@ export class SupabaseService {
   private defaultUrl: string | undefined;
 
   constructor() {
+    this.initClient();
+  }
+
+  private initClient(): void {
+    if (this.defaultClient) return;
     this.defaultUrl = process.env.SUPABASE_URL;
     const defaultKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -27,6 +49,7 @@ export class SupabaseService {
   }
 
   getStatus(): { isConfigured: boolean; url?: string } {
+    this.initClient();
     return {
       isConfigured: !!this.defaultClient,
       url: this.defaultUrl ? this.defaultUrl.replace(/https?:\/\//, '').split('.')[0] : undefined,
@@ -37,6 +60,7 @@ export class SupabaseService {
     if (config?.url && config?.key) {
       return createClient(config.url, config.key);
     }
+    this.initClient();
     if (this.defaultClient) {
       return this.defaultClient;
     }
