@@ -36,7 +36,7 @@ export class SupabaseService {
   private initClient(): void {
     if (this.defaultClient) return;
     this.defaultUrl = process.env.SUPABASE_URL;
-    const defaultKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const defaultKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (this.defaultUrl && defaultKey && !this.defaultUrl.includes('your-project')) {
       try {
