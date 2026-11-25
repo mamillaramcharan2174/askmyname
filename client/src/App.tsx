@@ -9,10 +9,20 @@ import { QueryPanel } from './components/QueryPanel.js';
 import { VisualResult } from './components/VisualResult.js';
 import { InsightCard } from './components/InsightCard.js';
 import { HistoryDrawer } from './components/HistoryDrawer.js';
-import { DatasetProfile, AgentAnalysisResponse, AgentStatus, HistoryItem } from './types/index.js';
+import { AuthModal } from './components/AuthModal.js';
+import { DatasetProfile, AgentAnalysisResponse, AgentStatus, HistoryItem, AuthUser } from './types/index.js';
 import { checkAgentStatus, askAgent, getDatasetHistory } from './api.js';
 
 export const App: React.FC = () => {
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    try {
+      const stored = localStorage.getItem('askmydata_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [status, setStatus] = useState<AgentStatus | null>(null);
   const [datasetId, setDatasetId] = useState<string | null>(null);
   const [dataset, setDataset] = useState<DatasetProfile | null>(null);
@@ -71,6 +81,25 @@ export const App: React.FC = () => {
     setAnalysisResponse(item.response);
   };
 
+  const handleAuthSuccess = (authenticatedUser: AuthUser) => {
+    setUser(authenticatedUser);
+    setIsAuthOpen(false);
+    try {
+      localStorage.setItem('askmydata_user', JSON.stringify(authenticatedUser));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+    try {
+      localStorage.removeItem('askmydata_user');
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {/* Header Navigation */}
@@ -80,6 +109,16 @@ export const App: React.FC = () => {
         onResetDataset={handleResetDataset}
         onOpenHistory={() => setIsHistoryOpen(true)}
         historyCount={history.length}
+        user={user}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        onSignOut={handleSignOut}
+      />
+
+      {/* Auth Modal (Username / Password / Forgot Password / Sign Up) */}
+      <AuthModal
+        isOpen={!user || isAuthOpen}
+        onClose={user ? () => setIsAuthOpen(false) : undefined}
+        onAuthSuccess={handleAuthSuccess}
       />
 
       {/* Main Content Area */}

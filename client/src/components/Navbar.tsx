@@ -1,6 +1,6 @@
 import React from 'react';
-import { Database, Sparkles, RefreshCw, ShieldCheck, Activity, BarChart3, BookOpen, History, Upload } from 'lucide-react';
-import { DatasetProfile } from '../types/index.js';
+import { Database, Sparkles, RefreshCw, ShieldCheck, Activity, BarChart3, BookOpen, History, Upload, User, LogIn, LogOut } from 'lucide-react';
+import { DatasetProfile, AuthUser } from '../types/index.js';
 
 interface NavbarProps {
   status?: { aiProvider: string; mode: string } | null;
@@ -13,6 +13,9 @@ interface NavbarProps {
   onOpenDemoGuide?: () => void;
   onLoadSample?: (sampleName: string) => void;
   isLoading?: boolean;
+  user?: AuthUser | null;
+  onOpenAuth?: () => void;
+  onSignOut?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -26,6 +29,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenDemoGuide,
   onLoadSample,
   isLoading,
+  user,
+  onOpenAuth,
+  onSignOut,
 }) => {
   const activeDataset = dataset || profile;
   const handleReset = onReset || onResetDataset || (() => {});
@@ -131,6 +137,41 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Upload className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">New CSV</span>
             </button>
+          )}
+
+          {/* User Authentication Status */}
+          {user ? (
+            <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
+              <div className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700/80 text-xs">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-500 text-white flex items-center justify-center font-bold text-[10px]">
+                  {(user.name || user.username || 'U')[0].toUpperCase()}
+                </div>
+                <span className="font-semibold text-slate-200 hidden sm:inline max-w-[110px] truncate">
+                  {user.name || user.username}
+                </span>
+              </div>
+              {onSignOut && (
+                <button
+                  onClick={onSignOut}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                  title="Sign out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          ) : (
+            onOpenAuth && (
+              <div className="pl-2 border-l border-slate-800">
+                <button
+                  onClick={onOpenAuth}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold transition-all flex items-center space-x-1.5 shadow-sm shadow-sky-600/30"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
+              </div>
+            )
           )}
         </div>
       </div>

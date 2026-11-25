@@ -1,4 +1,4 @@
-import { DatasetProfile, AgentAnalysisResponse, AgentStatus, HistoryItem, AnalysisQuery } from './types/index.js';
+import { DatasetProfile, AgentAnalysisResponse, AgentStatus, HistoryItem, AnalysisQuery, AuthUser } from './types/index.js';
 
 const API_BASE = '/api';
 
@@ -112,6 +112,56 @@ export async function askAgent(
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error || 'Agent query request failed');
+  }
+  return data;
+}
+
+export async function loginUser(
+  usernameOrEmail: string,
+  password: string
+): Promise<{ success: boolean; user: AuthUser; token: string }> {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usernameOrEmail, password }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Login failed. Please check your credentials.');
+  }
+  return data;
+}
+
+export async function registerUser(params: {
+  username: string;
+  email: string;
+  password: string;
+  name?: string;
+}): Promise<{ success: boolean; user: AuthUser; token: string }> {
+  const res = await fetch(`${API_BASE}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Registration failed.');
+  }
+  return data;
+}
+
+export async function forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to submit password reset request.');
   }
   return data;
 }

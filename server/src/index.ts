@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { datasetRouter } from './routes/datasetRoutes.js';
 import { agentRouter } from './routes/agentRoutes.js';
+import { authRouter } from './routes/authRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -25,6 +26,8 @@ app.use('/api/dataset', datasetRouter);
 app.use('/dataset', datasetRouter);
 app.use('/api/agent', agentRouter);
 app.use('/agent', agentRouter);
+app.use('/api/auth', authRouter);
+app.use('/auth', authRouter);
 
 // Serve client static production build if available
 import path from 'path';

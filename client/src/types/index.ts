@@ -133,3 +133,11 @@ export interface HistoryItem {
   response: AgentAnalysisResponse;
   timestamp: string;
 }
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  username: string;
+  name?: string;
+  token?: string;
+}
