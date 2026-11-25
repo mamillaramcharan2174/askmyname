@@ -9,6 +9,8 @@ const QueryRequestSchema = z.object({
   datasetId: z.string().min(1, 'datasetId is required'),
   question: z.string().min(1, 'Question cannot be empty'),
   previousQuery: AnalysisQuerySchema.optional(),
+  rows: z.array(z.record(z.any())).optional(),
+  profile: z.any().optional(),
 });
 
 // Run plain-language analytics query
@@ -23,9 +25,9 @@ agentRouter.post('/query', async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const { datasetId, question, previousQuery } = parseResult.data;
+    const { datasetId, question, previousQuery, rows, profile } = parseResult.data;
 
-    const analysisResponse = await agentRunner.runAnalysis(datasetId, question, previousQuery);
+    const analysisResponse = await agentRunner.runAnalysis(datasetId, question, previousQuery, rows, profile);
 
     res.json(analysisResponse);
   } catch (err: any) {

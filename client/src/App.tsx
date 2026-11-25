@@ -26,6 +26,7 @@ export const App: React.FC = () => {
   const [status, setStatus] = useState<AgentStatus | null>(null);
   const [datasetId, setDatasetId] = useState<string | null>(null);
   const [dataset, setDataset] = useState<DatasetProfile | null>(null);
+  const [datasetRows, setDatasetRows] = useState<Record<string, any>[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isQueryLoading, setIsQueryLoading] = useState<boolean>(false);
   const [analysisResponse, setAnalysisResponse] = useState<AgentAnalysisResponse | null>(null);
@@ -40,9 +41,10 @@ export const App: React.FC = () => {
       .catch((err) => console.warn('Could not connect to backend health check:', err));
   }, []);
 
-  const handleDatasetLoaded = (profile: DatasetProfile, newDatasetId: string) => {
+  const handleDatasetLoaded = (profile: DatasetProfile, newDatasetId: string, rows?: Record<string, any>[]) => {
     setDataset(profile);
     setDatasetId(newDatasetId);
+    setDatasetRows(rows || profile.previewRows || null);
     setAnalysisResponse(null);
     setHistory([]);
     setErrorMessage(null);
@@ -51,6 +53,7 @@ export const App: React.FC = () => {
   const handleResetDataset = () => {
     setDataset(null);
     setDatasetId(null);
+    setDatasetRows(null);
     setAnalysisResponse(null);
     setHistory([]);
     setErrorMessage(null);
@@ -64,12 +67,22 @@ export const App: React.FC = () => {
       setErrorMessage(null);
 
       const previousQuery = analysisResponse?.queryAst;
-      const res = await askAgent(datasetId, question, previousQuery);
+      const res = await askAgent(
+        datasetId,
+        question,
+        previousQuery,
+        datasetRows || undefined,
+        dataset || undefined
+      );
       setAnalysisResponse(res);
 
-      // Refresh history
-      const histRes = await getDatasetHistory(datasetId);
-      setHistory(histRes.history);
+      // Refresh history safely without failing the answer
+      try {
+        const histRes = await getDatasetHistory(datasetId);
+        setHistory(histRes.history);
+      } catch (histErr) {
+        console.warn('History fetch notice:', histErr);
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'An error occurred while answering your question.');
     } finally {

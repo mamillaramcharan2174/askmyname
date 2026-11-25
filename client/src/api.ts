@@ -8,7 +8,12 @@ export async function checkAgentStatus(): Promise<AgentStatus> {
   return res.json();
 }
 
-export async function uploadDataset(file: File): Promise<{ success: boolean; datasetId: string; profile: DatasetProfile }> {
+export async function uploadDataset(file: File): Promise<{
+  success: boolean;
+  datasetId: string;
+  profile: DatasetProfile;
+  rows?: Record<string, any>[];
+}> {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -28,6 +33,7 @@ export async function loadSampleDataset(sampleName: 'tech_sales_2024' | 'ecommer
   success: boolean;
   datasetId: string;
   profile: DatasetProfile;
+  rows?: Record<string, any>[];
 }> {
   const res = await fetch(`${API_BASE}/dataset/sample`, {
     method: 'POST',
@@ -50,6 +56,7 @@ export async function importFromSupabase(params: {
   success: boolean;
   datasetId: string;
   profile: DatasetProfile;
+  rows?: Record<string, any>[];
   importedRows: number;
   totalTableRows: number;
 }> {
@@ -97,7 +104,9 @@ export async function getDatasetHistory(datasetId: string): Promise<{ history: H
 export async function askAgent(
   datasetId: string,
   question: string,
-  previousQuery?: AnalysisQuery
+  previousQuery?: AnalysisQuery,
+  fallbackRows?: Record<string, any>[],
+  profile?: DatasetProfile
 ): Promise<AgentAnalysisResponse> {
   const res = await fetch(`${API_BASE}/agent/query`, {
     method: 'POST',
@@ -106,6 +115,8 @@ export async function askAgent(
       datasetId,
       question,
       previousQuery,
+      rows: fallbackRows ? fallbackRows.slice(0, 5000) : undefined,
+      profile,
     }),
   });
 

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { schemaProfiler } from '../tools/schemaProfiler.js';
 import { sessionStore } from '../data/sessionStore.js';
 import { supabaseService } from '../data/supabaseClient.js';
+import { BUNDLED_SAMPLES, parseBundledSample } from '../data/bundledSamples.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,6 +70,7 @@ datasetRouter.post('/upload', upload.single('file'), async (req: Request, res: R
       success: true,
       datasetId,
       profile,
+      rows: rows.slice(0, 5000), // return rows to client for resilient serverless rehydration
     });
   } catch (err: any) {
     console.error('[Upload Error]', err);
@@ -87,34 +89,49 @@ datasetRouter.post('/sample', async (req: Request, res: Response): Promise<void>
     };
 
     const targetFilename = allowedSamples[sampleName] || 'tech_sales_2024.csv';
-    const candidatePaths = [
-      path.join(__dirname, '../data/samples', targetFilename),
-      path.join(process.cwd(), 'src/data/samples', targetFilename),
-      path.join(process.cwd(), 'dist/data/samples', targetFilename),
-      path.join(process.cwd(), '../sample_datasets', targetFilename),
-      path.join(process.cwd(), 'sample_datasets', targetFilename),
-    ];
 
-    const targetPath = candidatePaths.find((p) => fs.existsSync(p));
-    if (!targetPath) {
-      res.status(404).json({ error: `Sample dataset "${targetFilename}" not found on server.` });
-      return;
+    let rows: Record<string, any>[];
+    let datasetId: string;
+    let profile: any;
+
+    // First check memory bundled samples (works 100% reliably on Vercel Serverless)
+    if (BUNDLED_SAMPLES[sampleName] || BUNDLED_SAMPLES[sampleName.replace('sample_', '')]) {
+      const key = BUNDLED_SAMPLES[sampleName] ? sampleName : sampleName.replace('sample_', '');
+      const parsed = parseBundledSample(key);
+      rows = parsed.rows;
+      datasetId = parsed.datasetId;
+      profile = parsed.profile;
+    } else {
+      const candidatePaths = [
+        path.join(__dirname, '../data/samples', targetFilename),
+        path.join(process.cwd(), 'src/data/samples', targetFilename),
+        path.join(process.cwd(), 'dist/data/samples', targetFilename),
+        path.join(process.cwd(), '../sample_datasets', targetFilename),
+        path.join(process.cwd(), 'sample_datasets', targetFilename),
+      ];
+
+      const targetPath = candidatePaths.find((p) => fs.existsSync(p));
+      if (!targetPath) {
+        // Fallback to bundled tech sales sample
+        const fallback = parseBundledSample('tech_sales_2024');
+        rows = fallback.rows;
+        datasetId = fallback.datasetId;
+        profile = fallback.profile;
+      } else {
+        const csvContent = fs.readFileSync(targetPath, 'utf-8');
+        const parseResult = Papa.parse<Record<string, any>>(csvContent, {
+          header: true,
+          skipEmptyLines: 'greedy',
+        });
+        rows = parseResult.data;
+        datasetId = `sample_${sampleName}_${Date.now()}`;
+        profile = schemaProfiler.execute({
+          datasetId,
+          filename: targetFilename,
+          rows,
+        });
+      }
     }
-
-    const csvContent = fs.readFileSync(targetPath, 'utf-8');
-    const parseResult = Papa.parse<Record<string, any>>(csvContent, {
-      header: true,
-      skipEmptyLines: 'greedy',
-    });
-
-    const rows = parseResult.data;
-    const datasetId = `sample_${sampleName}_${Date.now()}`;
-
-    const profile = schemaProfiler.execute({
-      datasetId,
-      filename: targetFilename,
-      rows,
-    });
 
     sessionStore.setDataset({
       id: datasetId,
@@ -129,6 +146,7 @@ datasetRouter.post('/sample', async (req: Request, res: Response): Promise<void>
       success: true,
       datasetId,
       profile,
+      rows: rows.slice(0, 5000), // return rows to client for resilient serverless rehydration
     });
   } catch (err: any) {
     console.error('[Sample Load Error]', err);
@@ -176,6 +194,7 @@ datasetRouter.post('/supabase', async (req: Request, res: Response): Promise<voi
       success: true,
       datasetId,
       profile,
+      rows: rows.slice(0, 5000),
       importedRows: rows.length,
       totalTableRows: rowCount,
     });
@@ -193,7 +212,7 @@ datasetRouter.get('/supabase/status', (req: Request, res: Response): void => {
 // Retrieve dataset profile & preview rows
 datasetRouter.get('/:id', (req: Request, res: Response): void => {
   const datasetId = String(req.params.id);
-  const session = sessionStore.getDataset(datasetId);
+  const session = sessionStore.getOrRestoreDataset(datasetId);
   if (!session) {
     res.status(404).json({ error: 'Dataset not found.' });
     return;
@@ -207,6 +226,7 @@ datasetRouter.get('/:id', (req: Request, res: Response): void => {
 // Retrieve dataset conversation & query history
 datasetRouter.get('/:id/history', (req: Request, res: Response): void => {
   const datasetId = String(req.params.id);
-  const history = sessionStore.getHistory(datasetId);
+  const session = sessionStore.getOrRestoreDataset(datasetId);
+  const history = session ? session.history : [];
   res.json({ history });
 });

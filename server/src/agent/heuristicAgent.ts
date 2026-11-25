@@ -19,6 +19,93 @@ export class HeuristicAgent {
     const qLower = question.trim().toLowerCase();
     const columns = profile.columns;
 
+    // 0. Informational / Meta questions about the application or purpose
+    const appQuestions = [
+      'what is the use of this app',
+      'what is this app',
+      'how to use this app',
+      'what can this app do',
+      'what can i ask',
+      'what does this app do',
+      'help',
+      'who are you',
+      'how does it work',
+      'explain this app',
+      'purpose of this app',
+    ];
+    if (appQuestions.some((t) => qLower.includes(t))) {
+      const topNum = columns.find((c) => c.inferredType === 'number');
+      const topCat = columns.find((c) => c.inferredType === 'string' && c.uniqueCount <= 10);
+      return {
+        isAmbiguous: true,
+        clarification: {
+          isAmbiguous: true,
+          reason: `AskMyData is an autonomous, read-only data analytics agent. It enables you to ask natural English questions about your CSV files or connected Supabase tables, calculating verified aggregations (sums, averages, counts, rankings, filters), generating interactive charts (Bar, Line, Area, Pie), and producing step-by-step execution traces with zero eval code execution.`,
+          clarificationQuestion: `What would you like to analyze on "${profile.filename}"?`,
+          options: [
+            {
+              label: `Total ${topNum ? topNum.name : 'Sales'} by ${topCat ? topCat.name : 'Category'}`,
+              description: `Aggregate numeric totals across key categories`,
+              promptSuggestion: `Show total ${topNum ? topNum.name : 'Revenue'} by ${topCat ? topCat.name : 'Region'}`,
+            },
+            {
+              label: `Top 5 Ranking Records`,
+              description: `Highlight highest individual records`,
+              promptSuggestion: `Which 5 records have the highest ${topNum ? topNum.name : 'Revenue'}?`,
+            },
+            {
+              label: `Overview of Dataset`,
+              description: `View overall schema, column types, and row distributions`,
+              promptSuggestion: `Give me an overview of this dataset`,
+            },
+          ],
+        },
+        plan: [
+          'Recognize request for application capabilities and purpose',
+          'Provide clear explanation of AskMyData features and execution engine',
+          'Offer starter queries tailored to the active dataset schema',
+        ],
+        reasoning: 'Informational query about application capabilities: returned guided clarification with executable starter queries.',
+      };
+    }
+
+    // 0.1 Questions about CSV upload procedure
+    const uploadQuestions = [
+      'how to upload',
+      'upload csv',
+      'upload the csv',
+      'process to upload',
+      'apload the csv',
+      'how to add dataset',
+    ];
+    if (uploadQuestions.some((t) => qLower.includes(t))) {
+      return {
+        isAmbiguous: true,
+        clarification: {
+          isAmbiguous: true,
+          reason: `To upload a CSV file: 1. Click "Upload CSV" or drag & drop your .csv file into the upload zone at the top of the dashboard. 2. AskMyData will instantly profile columns, infer data types, check nulls, and preview rows. 3. Type any plain-language analytics question in the Question bar!`,
+          clarificationQuestion: `Would you like to analyze the current dataset or try a sample?`,
+          options: [
+            {
+              label: `Analyze Current Dataset (${profile.filename})`,
+              description: `Run queries on the currently loaded data`,
+              promptSuggestion: `Show top 5 records by ${columns.find((c) => c.inferredType === 'number')?.name || 'value'}`,
+            },
+            {
+              label: `Load Tech Sales Demo Dataset`,
+              description: `Switch to the bundled Tech Sales 2024 dataset`,
+              promptSuggestion: `Show total revenue by region`,
+            },
+          ],
+        },
+        plan: [
+          'Identify question regarding CSV upload procedure',
+          'Return step-by-step instructions and exploration options',
+        ],
+        reasoning: 'User asked about CSV upload procedure.',
+      };
+    }
+
     // 1. Check for intentional ambiguity or underspecified queries
     // e.g., "show performance", "show metrics", "give me data", "summary"
     const ambiguousTriggers = [

@@ -4,7 +4,7 @@ import { DatasetProfile } from '../types/index.js';
 import { uploadDataset, loadSampleDataset, importFromSupabase, checkSupabaseStatus } from '../api.js';
 
 interface DatasetUploadProps {
-  onDatasetLoaded?: (profile: DatasetProfile, datasetId: string) => void;
+  onDatasetLoaded?: (profile: DatasetProfile, datasetId: string, rows?: Record<string, any>[]) => void;
   onUploadFile?: (file: File) => void;
   onLoadSample?: (sampleName: string) => void;
   isLoading?: boolean;
@@ -48,7 +48,7 @@ export const DatasetUpload: React.FC<DatasetUploadProps> = ({
         supabaseUrl: supabaseUrl.trim() || undefined,
         supabaseKey: supabaseKey.trim() || undefined,
       });
-      if (onDatasetLoaded) onDatasetLoaded(res.profile, res.datasetId);
+      if (onDatasetLoaded) onDatasetLoaded(res.profile, res.datasetId, res.rows);
     } catch (err: any) {
       setErrorMessage(err.message || 'Error connecting to Supabase table.');
     } finally {
@@ -75,7 +75,7 @@ export const DatasetUpload: React.FC<DatasetUploadProps> = ({
       if (setIsLoading) setIsLoading(true);
       setErrorMessage(null);
       const res = await uploadDataset(file);
-      if (onDatasetLoaded) onDatasetLoaded(res.profile, res.datasetId);
+      if (onDatasetLoaded) onDatasetLoaded(res.profile, res.datasetId, res.rows);
     } catch (err: any) {
       setErrorMessage(err.message || 'Error uploading dataset.');
     } finally {
@@ -93,7 +93,7 @@ export const DatasetUpload: React.FC<DatasetUploadProps> = ({
       if (setIsLoading) setIsLoading(true);
       setErrorMessage(null);
       const res = await loadSampleDataset(sampleName);
-      if (onDatasetLoaded) onDatasetLoaded(res.profile, res.datasetId);
+      if (onDatasetLoaded) onDatasetLoaded(res.profile, res.datasetId, res.rows);
     } catch (err: any) {
       setErrorMessage(err.message || 'Error loading sample dataset.');
     } finally {

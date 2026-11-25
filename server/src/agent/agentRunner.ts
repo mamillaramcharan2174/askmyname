@@ -4,17 +4,20 @@ import { safeQueryEngine } from '../tools/safeQueryEngine.js';
 import { chartFormatter } from '../tools/chartFormatter.js';
 import { aiService } from './aiService.js';
 import { AnalysisQuery } from '../schema/queryAst.js';
+import { DatasetProfile } from '../schema/dataset.js';
 
 export class AgentRunner {
   async runAnalysis(
     datasetId: string,
     question: string,
-    previousQuery?: AnalysisQuery
+    previousQuery?: AnalysisQuery,
+    fallbackRows?: Record<string, any>[],
+    fallbackProfile?: DatasetProfile
   ): Promise<AgentAnalysisResponse> {
     const totalStart = performance.now();
     const steps: TraceStep[] = [];
 
-    const session = sessionStore.getDataset(datasetId);
+    const session = sessionStore.getOrRestoreDataset(datasetId, fallbackRows, fallbackProfile);
     if (!session) {
       throw new Error(`Dataset with ID "${datasetId}" was not found or session has expired.`);
     }
