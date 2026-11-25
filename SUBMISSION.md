@@ -2,7 +2,9 @@
 
 **Theme:** Theme 9 — Data & Analytics Agents  
 **Project Title:** AskMyData  
-**Target Users:** Non-technical operators, business analysts, and managers who need insights from CSV data without knowing SQL.
+**Target Users:** Non-technical operators, business analysts, and managers who need insights from CSV data without knowing SQL.  
+**Live Application URL:** https://askmydata-ai.vercel.app/  
+**GitHub Repository:** https://github.com/mamillaramcharan2174/askmyname
 
 ---
 

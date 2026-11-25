@@ -1,7 +1,9 @@
 # AskMyData 📊🤖
 ### AI Data & Analytics Agent for Plain-Language CSV Analysis
 **Hackathon Theme:** Theme 9 — Data & Analytics Agents  
-**Target Users:** Business teams, operations leads, and data consumers who need to understand their data but do not know SQL.
+**Target Users:** Business teams, operations leads, and data consumers who need to understand their data but do not know SQL.  
+**Live Production URL:** [https://askmydata-ai.vercel.app/](https://askmydata-ai.vercel.app/)  
+**GitHub Repository:** [https://github.com/mamillaramcharan2174/askmyname](https://github.com/mamillaramcharan2174/askmyname)
 
 ---
 
