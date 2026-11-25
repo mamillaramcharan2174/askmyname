@@ -12,7 +12,7 @@ app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'ok',
     service: 'AskMyData Server',
@@ -22,7 +22,9 @@ app.get('/api/health', (req, res) => {
 
 // Mount routes
 app.use('/api/dataset', datasetRouter);
+app.use('/dataset', datasetRouter);
 app.use('/api/agent', agentRouter);
+app.use('/agent', agentRouter);
 
 // Serve client static production build if available
 import path from 'path';
