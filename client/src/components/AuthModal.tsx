@@ -61,23 +61,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  // Quick 1-Click Demo Login
-  const handleQuickDemoLogin = async () => {
-    setLoginIdentifier('demo@askmydata.com');
-    setLoginPassword('demo123');
-    try {
-      setIsLoading(true);
-      setErrorMessage(null);
-      const res = await loginUser('demo@askmydata.com', 'demo123');
-      onAuthSuccess(res.user);
-      if (onClose) onClose();
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Demo login failed.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Handle Register
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +171,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
                 <input
                   type="text"
-                  placeholder="demo@askmydata.com or username"
+                  placeholder="Username or email address"
                   value={loginIdentifier}
                   onChange={(e) => setLoginIdentifier(e.target.value)}
                   disabled={isLoading}
@@ -252,21 +235,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               )}
             </button>
 
-            {/* Quick Demo Login Option */}
-            <div className="pt-2 border-t border-slate-800">
-              <button
-                type="button"
-                onClick={handleQuickDemoLogin}
-                disabled={isLoading}
-                className="w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-750 text-slate-300 hover:text-white border border-slate-700 text-xs font-medium transition-all flex items-center justify-center space-x-2"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>1-Click Demo Login (demo@askmydata.com)</span>
-              </button>
-            </div>
-
             {/* Switch to Register */}
-            <p className="text-center text-xs text-slate-400 pt-1">
+            <p className="text-center text-xs text-slate-400 pt-2 border-t border-slate-800">
               Don't have an account?{' '}
               <button
                 type="button"

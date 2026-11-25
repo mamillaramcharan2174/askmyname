@@ -114,7 +114,7 @@ authRouter.post('/login', async (req: Request, res: Response): Promise<void> => 
 
     // Default error
     res.status(401).json({
-      error: 'User not found or invalid credentials. You can use demo@askmydata.com / demo123 or sign up.',
+      error: 'Invalid username/email or password. Please check your credentials or create a new account.',
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Login failed' });
@@ -213,7 +213,7 @@ authRouter.post('/forgot-password', async (req: Request, res: Response): Promise
     // Always return safe friendly success message (prevents user enumeration attacks)
     res.json({
       success: true,
-      message: `Password reset instructions have been sent to ${email}. If an account exists, you will receive an email shortly. (For demo accounts, use password "demo123")`,
+      message: `Password reset instructions have been sent to ${email}. If an account exists, you will receive an email shortly.`,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to process forgot password request' });
